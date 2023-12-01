@@ -1,111 +1,73 @@
+#include <array>
+#include <cctype>
 #include <iostream>
 #include <string>
 #include <string_view>
-#include <cctype>
-#include <array>
 
 using namespace std::literals;
 
-int getNumber(std::string_view line)
-{
-    int ret = 0;
-    constexpr auto digits = "0123456789"sv;
-    constexpr auto npos = std::string_view::npos;
+namespace {
+struct digit_string {
+  std::string_view find;
+  int digit;
+};
+struct digit_pos {
+  int digit;
+  size_t pos;
+};
 
-    if(auto pos = line.find_first_of(digits); pos != npos)
-    {
-        ret = line.at(pos) - '0';
-    }
+constexpr auto npos = std::string_view::npos;
+auto find_digit_pos_part1(std::string_view base, bool last) -> digit_pos {
+  static constexpr auto digits = "0123456789"sv;
+  if (auto pos = last ? base.find_last_of(digits) : base.find_first_of(digits);
+      pos != npos) {
+    return digit_pos{.digit = base.at(pos) - '0', .pos = pos};
+  }
+  return digit_pos{.digit = 0, .pos = npos};
+};
 
-    if(auto pos = line.find_last_of(digits); pos != npos)
-    {
-        ret *= 10;
-        ret += line.at(pos) - '0';
-    }
-
-    return ret;
+auto getNumber_part1(std::string_view line) -> int {
+  return find_digit_pos_part1(line, false).digit * 10 +
+         find_digit_pos_part1(line, true).digit;
 }
 
-int getNumberWithNames(std::string_view line)
-{
-    int ret = 0;
-    struct digit_string{
-        std::string_view find;
-        int digit;
-    };
-    static constexpr std::array digit_strings{
-        digit_string{"1"sv,1},
-        digit_string{"2"sv,2},
-        digit_string{"3"sv,3},
-        digit_string{"4"sv,4},
-        digit_string{"5"sv,5},
-        digit_string{"6"sv,6},
-        digit_string{"7"sv,7},
-        digit_string{"8"sv,8},
-        digit_string{"9"sv,9},
-        digit_string{"0"sv,0},
-        digit_string{"one"sv,1},
-        digit_string{"two"sv,2},
-        digit_string{"three"sv,3},
-        digit_string{"four"sv,4},
-        digit_string{"five"sv,5},
-        digit_string{"six"sv,6},
-        digit_string{"seven"sv,7},
-        digit_string{"eight"sv,8},
-        digit_string{"nine"sv,9}
-    };
-
-    auto get_first_digit = [] (std::string_view base)
-    {
-        size_t current_pos = std::string::npos;
-        int current_digit = 0;
-        for(auto f: digit_strings)
-        {
-            if(auto pos = base.find(f.find); pos != std::string::npos)
-            {
-                if(pos < current_pos || current_pos == std::string::npos)
-                {
-                    current_pos = pos;
-                    current_digit = f.digit;
-                }
-            }
-        }
-        return current_digit;
-    };
-
-    auto get_last_digit = [] (std::string_view base)
-    {
-        size_t current_pos = std::string::npos;
-        int current_digit = 0;
-        for(auto f: digit_strings)
-        {
-            if(auto pos = base.rfind(f.find); pos != std::string::npos)
-            {
-                if(pos > current_pos || current_pos == std::string::npos)
-                {
-                    current_pos = pos;
-                    current_digit = f.digit;
-                }
-            }
-        }
-        return current_digit;
-    };
-
-    ret = get_first_digit(line) * 10 + get_last_digit(line);
-    return ret;
-}
-
-int main()
-{
-    std::string line;
-    int summe_part1 = 0;
-    int summe_part2 = 0;
-    while (std::getline(std::cin, line))
-    {
-        summe_part1 += getNumber(line);
-        summe_part2 += getNumberWithNames(line);
+auto find_digit_pos_part2(std::string_view base, bool last) -> digit_pos {
+  static constexpr std::array<digit_string, 9> digit_strings = {
+      digit_string{"one"sv, 1},
+      {"two"sv, 2},
+      {"three"sv, 3},
+      {"four"sv, 4},
+      {"five"sv, 5},
+      {"six"sv, 6},
+      {"seven"sv, 7},
+      {"eight"sv, 8},
+      {"nine"sv, 9}};
+  digit_pos digit = find_digit_pos_part1(base, last);
+  for (auto f : digit_strings) {
+    if (auto pos = last ? base.rfind(f.find) : base.find(f.find); pos != npos) {
+      if ((last && pos > digit.pos) || (!last && pos < digit.pos) ||
+          (digit.pos == npos)) {
+        digit = {.digit = f.digit, .pos = pos};
+      }
     }
-    std::cout << "Sum Part1: " << summe_part1 << '\n';
-    std::cout << "Sum Part2: " << summe_part2 << '\n';
-    return 0;
+  }
+  return digit;
+};
+auto getNumber_part2(std::string_view line) -> int {
+  return find_digit_pos_part2(line, false).digit * 10 +
+         find_digit_pos_part2(line, true).digit;
+}
+} // namespace
+
+auto main() -> int {
+  std::string line;
+  int summe_part1 = 0;
+  int summe_part2 = 0;
+  while (std::getline(std::cin, line)) {
+    summe_part1 += getNumber_part1(line);
+    summe_part2 += getNumber_part2(line);
+  }
+  std::cout << "Sum Part1: " << summe_part1 << '\n';
+  std::cout << "Sum Part2: " << summe_part2 << '\n';
+  return 0;
 }
