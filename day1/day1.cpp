@@ -6,7 +6,7 @@
 
 using namespace std::literals;
 
-namespace
+namespace day1
 {
 struct digit_string
 {
@@ -72,8 +72,8 @@ auto main() -> int
     int summe_part2 = 0;
     while (std::getline(std::cin, line))
     {
-        summe_part1 += getNumber_part1(line);
-        summe_part2 += getNumber_part2(line);
+        summe_part1 += day1::getNumber_part1(line);
+        summe_part2 += day1::getNumber_part2(line);
     }
     std::cout << "Sum Part1: " << summe_part1 << '\n';
     std::cout << "Sum Part2: " << summe_part2 << '\n';

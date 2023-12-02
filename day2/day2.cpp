@@ -1,14 +1,15 @@
 #include <cctype>
+#include <charconv>
 #include <functional>
 #include <iostream>
+#include <optional>
 #include <ranges>
 #include <string>
 #include <string_view>
 
 using namespace std::literals;
-namespace sview = std::views;
 
-namespace
+namespace day2
 {
 
 struct color_count
@@ -18,50 +19,64 @@ struct color_count
     int blue;
 };
 
-auto processLine(std::string_view line, const std::function<bool(const color_count &)> &fn_check) -> int
+auto make_sv(std::ranges::subrange<const char *> val) -> std::string_view
 {
-    auto to_sv = [](std::ranges::range auto &&view) { return std::string_view{view.begin(), view.end()}; };
+    return {val.begin(), val.end()};
+};
 
-    auto split_line = line | sview::split(':') | sview::take(2);
+auto make_int(std::ranges::subrange<const char *> val) -> int
+{
+    int result = 0;
+    auto [_, ec] = std::from_chars(val.begin(), val.end(), result);
+    return result;
+};
 
-    auto beginn = split_line.begin();
-    auto game_id = (*beginn | sview::split(' ') | sview::drop(1) | sview::take(1) | sview::transform(to_sv)).front();
-    auto set_list = *(++beginn) | sview::split(';');
+auto get_front(std::ranges::range auto &&view) -> decltype(auto)
+{
+    if (!view.empty())
+    {
+        return std::optional(view.front());
+    }
+    return std::optional<decltype(view.front())>{};
+}
 
-    for (auto set : set_list)
+auto processLine(std::string_view line, const std::function<bool(const color_count &)> &fn_check) -> std::optional<int>
+{
+    using namespace std::views;
+
+    auto match = [](std::string_view match, std::ranges::range auto &input_view, std::ranges::range auto &result_view) {
+        return get_front(input_view | filter([&match](std::string_view val) { return val == match; }) |
+                         transform([&result_view](std::ranges::subrange<const char *> val) {
+                             return get_front(result_view).value_or(0);
+                         }));
+    };
+
+    auto split_line = line | split(':') | take(2);
+    auto game_id = get_front(split_line | take(1)).value_or(""sv) | split(' ') | drop(1) | transform(make_int);
+    auto set_list = get_front(split_line | drop(1)).value_or(""sv) | split(';');
+
+    for (const auto& set : set_list)
     {
         color_count colors{.red = 0, .green = 0, .blue = 0};
-        auto pull_list = set | sview::split(',');
-        for (auto pull : pull_list)
+        auto pull_list = set | split(',');
+        for (const auto& pull : pull_list)
         {
-            auto count =
-                (pull | sview::drop_while(isblank) | sview::split(' ') | sview::take(1) | sview::transform(to_sv))
-                    .front();
-            auto color = (pull | sview::drop_while(isblank) | sview::split(' ') | sview::drop(1) | sview::take(1) |
-                          sview::transform(to_sv))
-                             .front();
-            if (color == "red")
-            {
-                colors.red += std::stoi(std::string(count.begin(), count.end()));
-            }
-            if (color == "green")
-            {
-                colors.green += std::stoi(std::string(count.begin(), count.end()));
-            }
-            if (color == "blue")
-            {
-                colors.blue += std::stoi(std::string(count.begin(), count.end()));
-            }
+            auto count = pull | drop_while(isblank) | split(' ') | take(1) | transform(make_int);
+            auto color = pull | drop_while(isblank) | split(' ') | drop(1) | take(1) | transform(make_sv);
+
+            colors.red += match("red", color, count).value_or(0);
+            colors.green += match("green", color, count).value_or(0);
+            colors.blue += match("blue", color, count).value_or(0);
         }
         if (!fn_check(colors))
         {
             return 0;
         }
     }
-    return std::stoi(std::string{game_id.begin(), game_id.end()});
+    return get_front(game_id);
 }
 
-auto getPossibleID_part1(std::string_view line) -> int
+auto getPossibleID_part1(std::string_view line) -> std::optional<int>
 {
     static constexpr color_count target_counts{.red = 12, .green = 13, .blue = 14};
     return processLine(line, [](const color_count &colors) {
@@ -70,7 +85,7 @@ auto getPossibleID_part1(std::string_view line) -> int
     });
 }
 
-auto getPower_part2(std::string_view line) -> int
+auto getPower_part2(std::string_view line) -> std::optional<int>
 {
     color_count min_counts{.red = 0, .green = 0, .blue = 0};
     processLine(line, [&min_counts](const color_count &colors) {
@@ -82,7 +97,7 @@ auto getPower_part2(std::string_view line) -> int
     return min_counts.red * min_counts.green * min_counts.blue;
 }
 
-} // namespace
+} // namespace day2
 
 auto main() -> int
 {
@@ -91,8 +106,8 @@ auto main() -> int
     int summe_part2 = 0;
     while (std::getline(std::cin, line))
     {
-        summe_part1 += getPossibleID_part1(line);
-        summe_part2 += getPower_part2(line);
+        summe_part1 += day2::getPossibleID_part1(line).value_or(0);
+        summe_part2 += day2::getPower_part2(line).value_or(0);
     }
     std::cout << "Sum Part1: " << summe_part1 << '\n';
     std::cout << "Sum Part2: " << summe_part2 << '\n';
