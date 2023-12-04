@@ -58,8 +58,7 @@ auto process_line(std::string_view line) -> size_t
     auto winning_numbers_sv = get_front(card_values | split('|') | take(1) | transform(make_sv)).value_or(""sv);
     auto card_numbers_sv = get_front(card_values | split('|') | drop(1) | transform(make_sv)).value_or(""sv);
 
-    auto winning_numbers_view =
-        winning_numbers_sv | split(' ') | filter(is_not_empty_fn()) | transform(make_int);
+    auto winning_numbers_view = winning_numbers_sv | split(' ') | filter(is_not_empty_fn()) | transform(make_int);
     auto card_numbers_view = card_numbers_sv | split(' ') | filter(is_not_empty_fn()) | transform(make_int);
 
     std::set<int> winning_numbers_set(winning_numbers_view.begin(), winning_numbers_view.end());
@@ -73,7 +72,7 @@ auto process_line(std::string_view line) -> size_t
 
 auto get_points_part1(std::string_view line) -> int
 {
-    if (auto count = process_line(line); count > 0)
+    if (size_t count = process_line(line); count > 0)
     {
         return 1 << (count - 1);
     }
@@ -85,23 +84,24 @@ struct card_pile_part2
     auto add_card(std::string_view line) -> void
     {
         const int current_count = ++card_counts[++line_number];
-        if (auto count = process_line(line); count > 0)
+        if (size_t count = process_line(line); count > 0)
         {
-            for (int card = 0; card < count; ++card)
+            for (size_t card = 0; card < count; ++card)
             {
                 card_counts[line_number + card + 1] += current_count;
             }
         }
     }
-    auto get_count() -> int
+
+    [[nodiscard]] auto get_count() const -> int
     {
         auto values = card_counts | std::ranges::views::values;
         return std::accumulate(values.begin(), values.end(), 0, std::plus<>());
     }
 
 private:
-    int line_number = 0;
-    std::map<int, int> card_counts;
+    size_t line_number = 0;
+    std::map<size_t, int> card_counts;
 };
 
 } // namespace day4
