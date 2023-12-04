@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cctype>
 #include <charconv>
+#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <functional>
@@ -12,6 +13,7 @@
 #include <set>
 #include <string>
 #include <string_view>
+#include <thread>
 
 using namespace std::literals;
 
@@ -52,7 +54,6 @@ auto process_line(std::string_view line) -> size_t
 {
     using namespace std::views;
 
-    //auto card_name = get_front(line | split(':') | take(1) | transform(make_sv)).value_or(""sv);
     auto card_values = get_front(line | split(':') | drop(1) | transform(make_sv)).value_or(""sv);
 
     auto winning_numbers_sv = get_front(card_values | split('|') | take(1) | transform(make_sv)).value_or(""sv);
@@ -113,7 +114,6 @@ auto main() -> int
     int summe_part2 = 0;
     int line_number = 0;
     day4::card_pile_part2 card_pile;
-
     while (std::getline(std::cin, line))
     {
         summe_part1 += day4::get_points_part1(line);
