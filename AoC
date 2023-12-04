@@ -1,5 +1,5 @@
-#ifndef _common_included_
-#define _common_included_
+#ifndef _AoC_included_
+#define _AoC_included_
 
 #include <algorithm>
 #include <cctype>
@@ -18,7 +18,7 @@
 
 using namespace std::literals;
 
-namespace
+namespace AoC::common
 {
 auto is_digit(char chr) -> bool
 {
@@ -33,7 +33,7 @@ auto make_sv(std::ranges::subrange<const char *> val) -> std::string_view
 auto make_int(std::ranges::subrange<const char *> val) -> int
 {
     int result = 0;
-    auto [_, ec] = std::from_chars(val.begin(), val.end(), result);
+    [[maybe_unused]] auto [_, ec] = std::from_chars(val.begin(), val.end(), result);
     return result;
 };
 
@@ -50,5 +50,5 @@ auto is_not_empty_fn() -> auto
 {
     return [](const auto &tmp_v) -> bool { return !tmp_v.empty(); };
 }
-} // namespace
+} // namespace common
 #endif

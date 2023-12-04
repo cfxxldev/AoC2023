@@ -1,8 +1,10 @@
 // g++ --std=c++20 day4.cpp && cat input.txt | ./a.out
-#include "../common"
+#include "../AoC"
 
 namespace day4
 {
+using namespace AoC::common;
+
 auto process_line(std::string_view line) -> size_t
 {
     using namespace std::views;
@@ -49,8 +51,8 @@ struct card_pile_part2
 
     [[nodiscard]] auto get_count() const -> int
     {
-        auto values = card_counts | std::ranges::views::values;
-        return std::accumulate(values.begin(), values.end(), 0, std::plus<>());
+        auto map_values = card_counts | std::ranges::views::values;
+        return std::accumulate(map_values.begin(), map_values.end(), 0, std::plus<>());
     }
 
 private:
@@ -65,7 +67,6 @@ auto main() -> int
     std::string line;
     int summe_part1 = 0;
     int summe_part2 = 0;
-    int line_number = 0;
     day4::card_pile_part2 card_pile;
     while (std::getline(std::cin, line))
     {
