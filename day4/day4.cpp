@@ -1,54 +1,8 @@
 // g++ --std=c++20 day4.cpp && cat input.txt | ./a.out
-#include <algorithm>
-#include <cctype>
-#include <charconv>
-#include <cmath>
-#include <cstddef>
-#include <functional>
-#include <iostream>
-#include <map>
-#include <numeric>
-#include <optional>
-#include <ranges>
-#include <set>
-#include <string>
-#include <string_view>
-
-using namespace std::literals;
+#include "../common"
 
 namespace day4
 {
-auto is_digit(char chr) -> bool
-{
-    return (chr >= '0' && chr <= '9');
-}
-
-auto make_sv(std::ranges::subrange<const char *> val) -> std::string_view
-{
-    return {val.begin(), val.end()};
-};
-
-auto make_int(std::ranges::subrange<const char *> val) -> int
-{
-    int result = 0;
-    auto [_, ec] = std::from_chars(val.begin(), val.end(), result);
-    return result;
-};
-
-auto get_front(std::ranges::range auto &&view) -> decltype(auto)
-{
-    if (!view.empty())
-    {
-        return std::optional(view.front());
-    }
-    return std::optional<decltype(view.front())>{};
-}
-
-auto is_not_empty_fn() -> auto
-{
-    return [](const auto &tmp_v) -> bool { return !tmp_v.empty(); };
-}
-
 auto process_line(std::string_view line) -> size_t
 {
     using namespace std::views;
