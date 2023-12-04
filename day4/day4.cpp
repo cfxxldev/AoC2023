@@ -1,7 +1,7 @@
+// g++ --std=c++20 day4.cpp && cat input.txt | ./a.out
 #include <algorithm>
 #include <cctype>
 #include <charconv>
-#include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <functional>
@@ -13,7 +13,6 @@
 #include <set>
 #include <string>
 #include <string_view>
-#include <thread>
 
 using namespace std::literals;
 
