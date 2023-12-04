@@ -1,5 +1,5 @@
 // g++ --std=c++20 day4.cpp && cat input.txt | ./a.out
-#include "../AoC"
+#include "../AoC.hpp"
 
 namespace day4
 {
