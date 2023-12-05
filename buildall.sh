@@ -17,5 +17,5 @@ g++-13 --std=c++20 -O3 -ltbb day4.cpp && time bash -c 'cat ./input.txt | ./a.out
 cd ..
 
 cd day5
-g++ --std=c++20 -L/usr/lib64 -lstdc++ -ltbb -O3 day5.cpp && cat input.txt | ./a.out
+g++-13 --std=c++20 -L/usr/lib64 -lstdc++ -ltbb -O3 day5.cpp && cat input.txt | ./a.out
 cd ..
