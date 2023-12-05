@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <execution>
 #include <functional>
 #include <future>
 #include <iostream>

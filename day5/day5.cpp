@@ -10,13 +10,13 @@ struct mapping_range
     int64_t source_start;
     int64_t length;
 
-    [[nodiscard]] auto map(int64_t src) const -> std::optional<int64_t>
+    [[nodiscard]] auto map(int64_t src) const -> int64_t
     {
         if (int64_t distance = src - source_start; distance >= 0 && distance < length)
         {
             return destination_start + distance;
         }
-        return {};
+        return -1;
     }
 
     static auto from_range(std::ranges::range auto rng) -> std::optional<mapping_range>
@@ -65,9 +65,9 @@ struct ranged_map
         int64_t dest = src;
         for (const auto range : data)
         {
-            if (auto val = range.map(src); val.has_value())
+            if (auto val = range.map(src); val != -1)
             {
-                dest = val.value();
+                dest = val;
                 break;
             }
         }
@@ -147,31 +147,34 @@ struct seed_almanac
 
     auto find_location_part2()
     {
-        int64_t location = -1;
-        std::vector<std::future<int64_t>> threads;
-        const int64_t max_chunk_size = 5000000;
+        struct chunk
+        {
+            int64_t start;
+            int64_t size;
+            int64_t result;
+        };
+        const int64_t max_chunk_size = 50000000;
+        std::vector<chunk> chunks;
         for (auto itSeed = seeds.begin(); itSeed != seeds.end(); itSeed += 2)
         {
             int64_t seed = *itSeed;
             int64_t num_seeds = *(itSeed + 1);
             do
             {
-                int64_t chunk_size = std::min(max_chunk_size, chunk_size);
-                threads.emplace_back(
-                    std::async(std::launch::async, &seed_almanac::find_location_part2_async, this, seed, chunk_size));
+                int64_t chunk_size = std::min(max_chunk_size, num_seeds);
+                chunks.emplace_back(seed, chunk_size);
                 seed += chunk_size;
                 num_seeds -= chunk_size;
             } while (num_seeds > max_chunk_size);
         }
-        for (auto &thread : threads)
-        {
-            auto loc = thread.get();
-            if (location < 0 || loc < location)
-            {
-                location = loc;
-            }
-        }
-        return location;
+        std::for_each(std::execution::par_unseq, chunks.begin(), chunks.end(), [this](auto &chunk) {
+            return chunk.result = find_location_part2_async(chunk.start, chunk.size);
+        });
+        return std::min_element(std::execution::par_unseq,
+                                chunks.begin(),
+                                chunks.end(),
+                                [](auto &a, auto &b) { return a.result < b.result; })
+            ->result;
     }
 
 private:
@@ -188,7 +191,7 @@ private:
 
 } // namespace day5
 
-// g++ --std=c++20 -O3 day5.cpp && cat input.txt | ./a.out
+// g++ --std=c++20 -O3 -ltbb day5.cpp && cat input.txt | ./a.out
 auto main() -> int
 {
     std::string line;
