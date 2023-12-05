@@ -5,6 +5,7 @@
 #include <cctype>
 #include <charconv>
 #include <cmath>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <execution>
@@ -63,5 +64,39 @@ auto match(auto arg1, auto arg2, auto ret) -> std::optional<decltype(ret)>
     }
     return {};
 }
+
+template <typename T>
+struct mappable
+{
+    explicit mappable(T val) : value_(val){};
+    mappable &operator=(const T val)
+    {
+        value_ = val;
+        return *this;
+    };
+
+    [[nodiscard]] auto value() const -> T
+    {
+        return value_;
+    }
+
+    [[nodiscard]] auto map(const std::invocable<T> auto &func) const -> decltype(auto)
+    {
+        return mappable(func(this->value()));
+    }
+
+    [[nodiscard]] auto map(const auto &object) const -> decltype(auto)
+    {
+        auto map_fn = [](auto &arg) { return [&arg](T val) { return arg.map(val); }; };
+
+        return map(map_fn(object));
+    }
+
+    auto operator<=>(const mappable<T> &) const = default;
+
+private:
+    T value_{};
+};
+
 } // namespace AoC::common
 #endif

@@ -73,6 +73,7 @@ struct ranged_map
         }
         return dest;
     }
+
     auto operator[](int64_t src) const -> int64_t
     {
         return map(src);
@@ -89,8 +90,10 @@ struct seed_almanac
         using namespace std::ranges::views;
         if (line.empty())
         {
+            current_map = nullptr;
             return;
         }
+
         if (line.starts_with("seeds:"))
         {
             auto seed_ids = line | drop(7) | split(' ') | filter(is_not_empty_fn()) | transform(make_int<int64_t>);
@@ -98,6 +101,14 @@ struct seed_almanac
             current_map = nullptr;
             return;
         }
+
+        if (current_map != nullptr)
+        {
+            auto mapping = line | split(' ') | transform(make_int<int64_t>);
+            current_map->add_range(mapping_range::from_range(mapping));
+            return;
+        }
+
         current_map = match(line, "seed-to-soil map:"sv, &seed_to_soil).value_or(current_map);
         current_map = match(line, "soil-to-fertilizer map:"sv, &soil_to_fertilizer).value_or(current_map);
         current_map = match(line, "fertilizer-to-water map:"sv, &fertilizer_to_water).value_or(current_map);
@@ -105,44 +116,34 @@ struct seed_almanac
         current_map = match(line, "light-to-temperature map:"sv, &light_to_temperature).value_or(current_map);
         current_map = match(line, "temperature-to-humidity map:"sv, &temperature_to_humidity).value_or(current_map);
         current_map = match(line, "humidity-to-location map:"sv, &humidity_to_location).value_or(current_map);
+    }
 
-        if (current_map != nullptr)
-        {
-            auto mapping = line | split(' ') | transform(make_int<int64_t>);
-            current_map->add_range(mapping_range::from_range(mapping));
-        }
+    auto seed_to_location(int64_t seed) -> int64_t
+    {
+        return mappable(seed)
+            .map(seed_to_soil)
+            .map(soil_to_fertilizer)
+            .map(fertilizer_to_water)
+            .map(water_to_light)
+            .map(light_to_temperature)
+            .map(temperature_to_humidity)
+            .map(humidity_to_location)
+            .value();
+    }
+
+    auto min_location(std::ranges::range auto &&range)
+    {
+        return std::ranges::min(range | std::views::transform([this](auto seed) { return seed_to_location(seed); }));
     }
 
     auto find_location_part1()
     {
-        std::set<int64_t> locations;
-        for (auto seed : seeds)
-        {
-            auto location = humidity_to_location
-                [temperature_to_humidity
-                     [light_to_temperature
-                          [water_to_light[fertilizer_to_water[soil_to_fertilizer[seed_to_soil[seed]]]]]]];
-            locations.insert(location);
-        }
-        return *locations.begin();
+        return min_location(seeds);
     }
-
 
     auto find_location_part2_async(int64_t start, int64_t count)
     {
-        int64_t location = -1;
-        for (int64_t seed_ofs = 0; seed_ofs < count; ++seed_ofs)
-        {
-            auto loc = humidity_to_location
-                [temperature_to_humidity
-                     [light_to_temperature
-                          [water_to_light[fertilizer_to_water[soil_to_fertilizer[seed_to_soil[start + seed_ofs]]]]]]];
-            if (location < 0 || loc < location)
-            {
-                location = loc;
-            }
-        }
-        return location;
+        return min_location(std::views::iota(start, start + count - 1));
     }
 
     auto find_location_part2()
@@ -153,28 +154,33 @@ struct seed_almanac
             int64_t size;
             int64_t result;
         };
-        const int64_t max_chunk_size = 50000000;
+
+        static constexpr int64_t max_chunk_size = 10000000;
+        //static constexpr int64_t max_chunk_size = 1000;
         std::vector<chunk> chunks;
+        auto add_chunk = [&chunks](auto &seed, auto &num_seeds) {
+            int64_t chunk_size = std::min(max_chunk_size, num_seeds);
+            chunks.emplace_back(seed, chunk_size);
+            seed += chunk_size;
+            num_seeds -= chunk_size;
+            return num_seeds > max_chunk_size;
+        };
+
         for (auto itSeed = seeds.begin(); itSeed != seeds.end(); itSeed += 2)
         {
             int64_t seed = *itSeed;
             int64_t num_seeds = *(itSeed + 1);
-            do
+
+            while (add_chunk(seed, num_seeds))
             {
-                int64_t chunk_size = std::min(max_chunk_size, num_seeds);
-                chunks.emplace_back(seed, chunk_size);
-                seed += chunk_size;
-                num_seeds -= chunk_size;
-            } while (num_seeds > max_chunk_size);
+            }
         }
+
         std::for_each(std::execution::par_unseq, chunks.begin(), chunks.end(), [this](auto &chunk) {
             return chunk.result = find_location_part2_async(chunk.start, chunk.size);
         });
-        return std::min_element(std::execution::par_unseq,
-                                chunks.begin(),
-                                chunks.end(),
-                                [](auto &a, auto &b) { return a.result < b.result; })
-            ->result;
+
+        return std::ranges::min(chunks, std::less<>(), [](auto &chunk) { return chunk.result; }).result;
     }
 
 private:
