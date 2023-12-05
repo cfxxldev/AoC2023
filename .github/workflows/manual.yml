@@ -12,12 +12,11 @@ jobs:
   # This workflow contains a single job called "greet"
   greet:
     # The type of runner that the job will run on
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Setup dependencies
-        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get install -y gcc-13 llvm-18 clang-18 libtbb-dev
           sudo update-alternatives \
@@ -31,6 +30,7 @@ jobs:
           --slave /usr/bin/llvm-cov llvm-cov /usr/bin/llvm-cov-18
           sudo update-alternatives \
           --install /usr/bin/clang clang /usr/bin/clang-18 100
+        shell: bash
       - uses: actions/checkout@v2
       - name: Run script file
         run: |
