@@ -14,8 +14,8 @@ auto process_line(std::string_view line) -> size_t
     auto winning_numbers_sv = get_front(card_values | split('|') | take(1) | transform(make_sv)).value_or(""sv);
     auto card_numbers_sv = get_front(card_values | split('|') | drop(1) | transform(make_sv)).value_or(""sv);
 
-    auto winning_numbers_view = winning_numbers_sv | split(' ') | filter(is_not_empty_fn()) | transform(make_int);
-    auto card_numbers_view = card_numbers_sv | split(' ') | filter(is_not_empty_fn()) | transform(make_int);
+    auto winning_numbers_view = winning_numbers_sv | split(' ') | filter(is_not_empty_fn()) | transform(make_int<int>);
+    auto card_numbers_view = card_numbers_sv | split(' ') | filter(is_not_empty_fn()) | transform(make_int<int>);
 
     std::set<int> winning_numbers_set(winning_numbers_view.begin(), winning_numbers_view.end());
     std::set<int> card_numbers_set(card_numbers_view.begin(), card_numbers_view.end());
