@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Setup dependencies
         run: |
-          sudo apt-get install -y gcc-13 libtbb2-dev
+          sudo apt-get install -y gcc-13 libtbb12-dev
           sudo update-alternatives \
           --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 \
           --slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-13 \
