@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Run script file
         run: |
-           cd AoC2023
+           cd /home/runner/work/AoC2023/AoC2023
            chmod +x ./buildall.sh
            ./buildall.sh
         shell: bash
