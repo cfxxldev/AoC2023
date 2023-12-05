@@ -19,6 +19,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Run script file
         run: |
-           chmod +x ./public/buildall.sh
-           ./public/buildall.sh
+           cd ${{ runner.temp }}
+           chmod +x ./buildall.sh
+           ./buildall.sh
         shell: bash
