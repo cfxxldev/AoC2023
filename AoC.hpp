@@ -56,6 +56,16 @@ auto is_not_empty_fn() -> auto
     return [](const auto &tmp_v) -> bool { return !tmp_v.empty(); };
 }
 
+auto is_char_fn(char chr) -> auto
+{
+    return [chr](char tmp) -> bool { return chr == tmp; };
+}
+
+auto is_not_char_fn(char chr) -> auto
+{
+    return [chr](char tmp) -> bool { return chr != tmp; };
+}
+
 auto match(auto arg1, auto arg2, auto ret) -> std::optional<decltype(ret)>
 {
     if (arg1 == arg2)
@@ -64,6 +74,25 @@ auto match(auto arg1, auto arg2, auto ret) -> std::optional<decltype(ret)>
     }
     return {};
 }
+
+template <typename T = int>
+auto to_int(std::string_view val) -> T
+{
+    T result = 0;
+    [[maybe_unused]] auto [_, ec] = std::from_chars(val.begin(), val.end(), result);
+    return result;
+};
+
+auto range_to_string(std::ranges::range auto &&view)
+{
+    std::string result;
+    for (const char chr : view)
+    {
+        result.push_back(chr);
+    }
+    return result;
+}
+
 
 template <typename T>
 struct mappable
