@@ -58,7 +58,7 @@ private:
 
 } // namespace day6
 
-// g++ --std=c++20 -O3 -ltbb day5.cpp && cat input.txt | ./a.out
+// g++ --std=c++20 -O3 -ltbb day6.cpp && cat input.txt | ./a.out
 auto main() -> int
 {
     std::string line;
