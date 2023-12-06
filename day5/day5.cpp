@@ -4,19 +4,27 @@ namespace day5
 {
 using namespace AoC::common;
 
+struct destination_range
+{
+    int64_t destination;
+    int64_t distance_to_end;
+
+    auto operator<=>(const destination_range &) const = default;
+};
+
 struct mapping_range
 {
     int64_t destination_start;
     int64_t source_start;
     int64_t length;
 
-    [[nodiscard]] auto map(int64_t src) const -> int64_t
+    [[nodiscard]] auto map(int64_t src) const -> std::optional<destination_range>
     {
         if (int64_t distance = src - source_start; distance >= 0 && distance < length)
         {
-            return destination_start + distance;
+            return destination_range{.destination = destination_start + distance, .distance_to_end = length - distance};
         }
-        return -1;
+        return {};
     }
 
     static auto from_range(std::ranges::range auto rng) -> std::optional<mapping_range>
@@ -60,24 +68,40 @@ struct ranged_map
         return std::optional<decltype(add_range(range.value()))>{};
     }
 
-    [[nodiscard]] auto map(int64_t src) const -> int64_t
+    [[nodiscard]] auto map(int64_t src) const -> destination_range
     {
-        int64_t dest = src;
+        destination_range dest{.destination = src, .distance_to_end = 1};
         for (const auto range : data)
         {
-            if (auto val = range.map(src); val != -1)
+            if (auto val = range.map(src); val.has_value())
             {
-                dest = val;
+                dest = val.value();
+                break;
+            }
+            if(range.destination_start > src )
+            {
+                dest.distance_to_end = range.destination_start - src;
                 break;
             }
         }
         return dest;
     }
 
-    auto operator[](int64_t src) const -> int64_t
+    [[nodiscard]] auto map(destination_range src) const -> destination_range
     {
-        return map(src);
+        destination_range dest = src;
+        for (const auto range : data)
+        {
+            if (auto val = range.map(src.destination); val.has_value())
+            {
+                dest = val.value();
+                dest.distance_to_end = std::min(dest.distance_to_end,src.distance_to_end);
+                break;
+            }
+        }
+        return dest;
     }
+
 
 private:
     std::set<mapping_range> data;
@@ -118,7 +142,7 @@ struct seed_almanac
         current_map = match(line, "humidity-to-location map:"sv, &humidity_to_location).value_or(current_map);
     }
 
-    auto seed_to_location(int64_t seed) -> int64_t
+    auto seed_to_location(int64_t seed) -> destination_range
     {
         return mappable(seed)
             .map(seed_to_soil)
@@ -133,17 +157,24 @@ struct seed_almanac
 
     auto min_location(std::ranges::range auto &&range)
     {
-        return std::ranges::min(range | std::views::transform([this](auto seed) { return seed_to_location(seed); }));
+        return std::ranges::min(range);
     }
 
     auto find_location_part1()
     {
-        return min_location(seeds);
+        return min_location(seeds | std::views::transform([this](auto seed) { return seed_to_location(seed); })).destination;
     }
 
     auto find_location_part2_async(int64_t start, int64_t count)
     {
-        return min_location(std::views::iota(start, start + count - 1));
+        int64_t location = std::numeric_limits<int64_t>::max();
+        for(int64_t seed = start; seed < start + count; ++seed)
+        {
+            auto loc = seed_to_location(seed);
+            seed += loc.distance_to_end - 1;
+            location = std::min(location,loc.destination);
+        }
+        return location;
     }
 
     auto find_location_part2()
@@ -155,28 +186,16 @@ struct seed_almanac
             int64_t result;
         };
 
-        static constexpr int64_t max_chunk_size = 10000000;
-        //static constexpr int64_t max_chunk_size = 1000;
         std::vector<chunk> chunks;
-        auto add_chunk = [&chunks](auto &seed, auto &num_seeds) {
-            int64_t chunk_size = std::min(max_chunk_size, num_seeds);
-            chunks.emplace_back(seed, chunk_size);
-            seed += chunk_size;
-            num_seeds -= chunk_size;
-            return num_seeds > max_chunk_size;
-        };
-
         for (auto itSeed = seeds.begin(); itSeed != seeds.end(); itSeed += 2)
         {
             int64_t seed = *itSeed;
             int64_t num_seeds = *(itSeed + 1);
 
-            while (add_chunk(seed, num_seeds))
-            {
-            }
+            chunks.emplace_back(seed, num_seeds);
         }
 
-        std::for_each(std::execution::par_unseq, chunks.begin(), chunks.end(), [this](auto &chunk) {
+        std::for_each(std::execution::seq, chunks.begin(), chunks.end(), [this](auto &chunk) {
             return chunk.result = find_location_part2_async(chunk.start, chunk.size);
         });
 

@@ -82,7 +82,7 @@ struct mappable
 
     [[nodiscard]] auto map(const std::invocable<T> auto &func) const -> decltype(auto)
     {
-        return mappable(func(this->value()));
+        return mappable<decltype(func(this->value()))>(func(this->value()));
     }
 
     [[nodiscard]] auto map(const auto &object) const -> decltype(auto)
