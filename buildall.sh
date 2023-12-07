@@ -56,3 +56,12 @@ echo ""
 echo "clang"
 clang --std=c++20 -lstdc++ -ltbb -O3 day6.cpp && time zsh -c 'cat input.txt | ./a.out'
 cd ..
+
+cd day7
+echo ""
+echo "gcc"
+gcc --std=c++20 -lstdc++ -ltbb -O3 day7.cpp && time zsh -c 'cat input.txt | ./a.out'
+echo ""
+echo "clang"
+clang --std=c++20 -lstdc++ -ltbb -O3 day7.cpp && time zsh -c 'cat input.txt | ./a.out'
+cd ..
