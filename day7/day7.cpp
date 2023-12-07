@@ -1,7 +1,4 @@
 #include "../AoC.hpp"
-#include <cstdint>
-#include <limits>
-#include <ranges>
 
 namespace day7
 {
@@ -193,7 +190,7 @@ private:
 };
 } // namespace day7
 
-// g++ --std=c++20 -O3 -ltbb day6.cpp && cat input.txt | ./a.out
+// g++ --std=c++20 -O3 -ltbb day7.cpp && cat input.txt | ./a.out
 auto main() -> int
 {
     std::string line;
