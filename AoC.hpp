@@ -67,6 +67,16 @@ auto is_not_char_fn(char chr) -> auto
     return [chr](char tmp) -> bool { return chr != tmp; };
 }
 
+auto is_equal_fn(auto value) -> auto
+{
+    return [value](auto tmp) -> bool { return value == tmp; };
+}
+
+auto is_not_equal_fn(auto value) -> auto
+{
+    return [value](auto tmp) -> bool { return value != tmp; };
+}
+
 auto match(auto arg1, auto arg2, auto ret) -> std::optional<decltype(ret)>
 {
     if (arg1 == arg2)
