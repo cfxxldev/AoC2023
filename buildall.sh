@@ -74,3 +74,12 @@ echo ""
 echo "clang"
 clang --std=c++23 -lstdc++ -ltbb -O3 day8.cpp && time zsh -c 'cat input.txt | ./a.out'
 cd ..
+
+cd day9
+echo ""
+echo "gcc"
+gcc --std=c++23 -lstdc++ -ltbb -O3 day9.cpp && time zsh -c 'cat input.txt | ./a.out'
+echo ""
+echo "clang"
+clang --std=c++23 -lstdc++ -ltbb -O3 day9.cpp && time zsh -c 'cat input.txt | ./a.out'
+cd ..

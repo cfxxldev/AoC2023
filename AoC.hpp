@@ -104,6 +104,14 @@ auto range_to_string(std::ranges::range auto &&view)
     return result;
 }
 
+auto print_range(const std::ranges::range auto &numbers)
+{
+    for(auto num:numbers)
+    {
+        std::cout << num << ' ';
+    }
+    std::cout << '\n';
+}
 
 template <typename T>
 struct mappable
