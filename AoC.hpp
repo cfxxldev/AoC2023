@@ -146,5 +146,58 @@ private:
     T value_{};
 };
 
+struct chars_map
+{
+    chars_map()
+    {
+        number_map.reserve(140);
+    }
+    auto add_line(const std::string &line) -> std::string&
+    {
+        return number_map.emplace_back(line);
+    }
+    [[nodiscard]] auto get_at(int64_t x, int64_t y) const -> std::optional<char>
+    {
+        if (x < 0 || y < 0 || y >= number_map.size())
+        {
+            return {};
+        }
+        if (const auto &line = number_map.at(y); x < line.length())
+        {
+            return line.at(x);
+        }
+        return {};
+    }
+    [[nodiscard]] auto set_at(int64_t x, int64_t y, char chr)
+    {
+        if (x < 0 || y < 0 || y >= number_map.size())
+        {
+            return;
+        }
+        if (auto &line = number_map.at(y); x < line.length())
+        {
+            line.at(x) = chr;
+        }
+    }
+    [[nodiscard]] auto get_line(int y) const -> std::string_view
+    {
+        if (y < 0 || y >= number_map.size())
+        {
+            return ""sv;
+        }
+        return number_map.at(y);
+    }
+    auto operator[](int x, int y) const -> std::optional<char>
+    {
+        return get_at(x, y);
+    }
+    [[nodiscard]] auto lines() -> auto&
+    {
+        return number_map;
+    }
+private:
+    std::vector<std::string> number_map;
+};
+
 } // namespace AoC::common
 #endif
