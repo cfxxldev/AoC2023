@@ -134,6 +134,7 @@ struct pipes
                 return dir;
             }
         }
+        std::unreachable();
         return opposite(from);
     }
     auto next_node(const pipe_node &node) -> pipe_node
